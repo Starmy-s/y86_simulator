@@ -5,6 +5,7 @@
 #include "Memory.h"
 #include "RegisterFile.h"
 
+#include <iostream>
 #include <vector>
 #include <cstdint>
 
@@ -12,10 +13,9 @@ class Y86Core{
 private:
     RegisterFile reg_file;
     uint64_t pc = 0;
-    uint8_t cc_register;
-    Memory* mem_ptr;
+    uint8_t cc_register = 0;
+    Memory* mem_ptr = nullptr;
     Stat stat = S_AOK;
-    Stat next_stat = S_AOK;
 
     uint64_t alu_compute(uint64_t aluA, uint64_t aluB, uint8_t alufun, uint8_t& alu_cc_signals) const {
         uint64_t valE = 0;
@@ -58,6 +58,7 @@ private:
             case F_JNE: return !zf;
             case F_JGE: return !(sf ^ of);
             case F_JG: return !(sf ^ of) && !zf;
+            default: return false; // 不加不让 build
         }
     }
 
@@ -81,8 +82,34 @@ private:
     uint64_t ctrl_new_pc(uint8_t icode, bool cnd, uint64_t valC, uint64_t valM, uint64_t valP);
 
 public:
-    Y86Core(Memory* memory);
+    Y86Core(Memory* memory) : mem_ptr(memory) {}
     void clock_tick();
+
+    Stat get_stat() const {
+        return this->stat;
+    }
+
+    void dump_cpu_state() const {
+        std::cout << "\n=================== 处理器物理现场快照 ===================" << std::endl;
+        
+        switch (this->stat) {
+            case S_HLT: std::cout << ">> 状态编码 (Stat): S_HLT (Halt 正常停机)" << std::endl; break;
+            case S_ADR: std::cout << ">> 状态编码 (Stat): S_ADR (Fatal! 内存越界异常)" << std::endl; break;
+            case S_INS: std::cout << ">> 状态编码 (Stat): S_INS (Fatal! 非法指令异常)" << std::endl; break;
+            case S_AOK: std::cout << ">> 状态编码 (Stat): S_AOK (健康运行中)" << std::endl; break;
+        }
+        
+        std::cout << ">> 程序计数器 (PC)  : 0x" << std::hex << this->pc << std::dec << std::endl;
+        std::cout << ">> 条件码 (CC)      : ZF=" << ((cc_register >> 2) & 1) 
+                  << ", SF=" << ((cc_register >> 1) & 1) 
+                  << ", OF=" << (cc_register & 1) << std::endl;
+        
+        std::cout << "----------------- 通用寄存器文件 (RF) -----------------" << std::endl;
+        std::cout << "   %rax: 0x" << std::hex << reg_file.read_port_A(0) << std::endl;
+        std::cout << "   %rcx: 0x" << reg_file.read_port_A(1) << std::endl;
+        std::cout << "   %rdx: 0x" << reg_file.read_port_A(2) << std::dec << std::endl;
+        std::cout << "==========================================================" << std::endl;
+    }
 };
 
 #endif // !CPU_H

@@ -33,7 +33,7 @@ void Y86Core::clock_tick(){
     // [硬件单元：Align]
     uint8_t rA = need_regids == true ? (instr_bytes[1] >> 4) & 0x0F : R_NONE; // [总线]
     uint8_t rB = need_regids == true ? instr_bytes[1] & 0x0F : R_NONE; // [总线]
-    uint8_t valC =  *(uint64_t*)&instr_bytes[1 + need_regids]; // [总线] 小端序，前提：宿主机 cpu 是小端序的
+    uint64_t valC =  *(uint64_t*)&instr_bytes[1 + need_regids]; // [总线] 小端序，前提：宿主机 cpu 是小端序的
 
     // [硬件单元：PC增加器] 不管具体怎么加的
     uint64_t valP = this->pc + 1 + need_regids + 8 * need_valC;
@@ -110,21 +110,28 @@ void Y86Core::clock_tick(){
     uint8_t dstE = ctrl_dstE(icode, rB, cnd);
     uint8_t dstM = ctrl_dstM(icode, rA);
 
-    // [硬件单元：寄存器文件]
-    reg_file.write_ports(dstE, valE, dstM, valM);
-    
+    // [硬件单元：寄存器文件] 模拟锁存
+    // reg_file.write_ports(dstE, valE, dstM, valM);
+
     // ------------------------------------------------------------------
     // 6. 更新 PC 状态
     // ------------------------------------------------------------------
-
+    
     // [控制逻辑块]
     next_pc = ctrl_new_pc(icode, cnd, valC, valM, valP);
-
+    
     // ------------------------------------------------------------------
     // 时钟电路上升沿
     // ------------------------------------------------------------------
-
     
+    // ai 说这么写仿真，我不太明白
+    if (this->stat != S_AOK || next_stat != S_AOK) {
+        this->stat = next_stat; 
+        return; // 物理熔断
+    }
+    
+    // [硬件单元：寄存器文件]
+    reg_file.write_ports(dstE, valE, dstM, valM);
     this->pc = next_pc;
     this->stat = next_stat;
     this->cc_register = next_cc;

@@ -15,9 +15,8 @@ private:
     uint64_t size;
 
 public:
-    Memory(uint64_t bytes) : size(bytes){
-        storage.resize(bytes, 0);
-    }
+    // 尽量别拿一个类内变量去初始化另一个类内变量
+    Memory(uint64_t bytes) : size(bytes), storage(bytes, 0) {}
 
     uint8_t read_byte(uint64_t addr, bool& mem_error) const {
         if(addr >= size){
