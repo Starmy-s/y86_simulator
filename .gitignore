@@ -1,0 +1,28 @@
+# 1. 编译产物 (Binary Files)
+*.exe
+*.o
+*.out
+*.obj
+*.so
+*.dylib
+*.a
+
+# 2. 文件夹产物 (Build Directories)
+build/
+bin/
+dist/
+target/
+
+# 3. VS Code 配置 (个人环境配置，不要共享)
+.vscode/
+# 注意：如果你确实想共享调试配置，可以移除上面那行，但通常建议不要提交
+
+# 4. 操作系统临时文件
+.DS_Store
+Thumbs.db
+*.swp
+
+# 5. 可选：如果你使用其它 IDE
+.idea/
+*.sln
+*.sdf
