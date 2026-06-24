@@ -1,0 +1,7 @@
+# asm_src/basic_alu.ys
+.pos 0
+init:
+    irmovq $0x3000, %rax   # rax = 0x3000
+    irmovq $0x1000, %rcx   # rcx = 0x1000
+    subq %rcx, %rax        # rax = rax - rcx = 0x2000 (subq会设置条件码)
+    halt                   # 晶振熔断断电

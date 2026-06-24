@@ -78,58 +78,37 @@ cmake --build .
 
 ```
 
-### 2. 仿真运行
+### 2. 通电运行指南
 
 ```bash
-./y86_simulator
+cd build
+./y86_sim ./machine_code/asum.yo
 
 ```
-
-**📊 预期控制台 Dump 输出快照：**
-
-```text
-[硬件主板] 正在通电并初始化物理电路...
-[硬件主板] 初始化完毕。当前 PC = 0x0000，CPU 处于 AOK 状态。
-=================== 晶振开始工作 ===================
-
-=================== 晶振停止震荡 ===================
-[时钟熔断] 在第 4 个周期检测到非 AOK 状态！
-
-=================== 处理器物理现场快照 ===================
->> 状态编码 (Stat): S_HLT (Halt 正常停机)
->> 程序计数器 (PC)  : 0x16
->> 条件码 (CC)      : ZF=0, SF=0, OF=0
------------------ 通用寄存器文件 (RF) -----------------
-   %rax: 0x1234
-   %rcx: 0x8a8a
-   %rdx: 0x0
-==========================================================
-```
-
-测试用例预刷入的算术逻辑运算 `0x1234 + 0x7856 = 0x8a8a` 完美锁入目标寄存器 `%rcx`，数据流与控制时序通过一致性验证。
-
----
 
 ## 📂 项目目录树
 
 ```text
-.
-├── CMakeLists.txt        # CMake 构建配置文件
-├── LICENSE               # 项目开源许可证
-├── README.md             # 本通电运行指南
-├── docs/                 # 体系结构物理微操作白皮书
-│   ├── 01_hardware_entity.md
-│   ├── 02_isa_reference.md
-│   ├── 03_instruction_lifecycle.md
-│   └── 04_debug_trophies.md
-├── include/              # 硬件实体与控制总线接口定义 (.h)
-│   ├── CPU.h             # 单周期 SEQ 状态机控制总闸，管理时钟沿信号
-│   ├── Memory.h          # 物理主存总线接口，内嵌小端序转换原语
-│   ├── RegisterFile.h    # 15个 64位 D触发器通用寄存器堆阵列声明
-│   └── Types.h           # ISA 译码真值表、操作码及硬件状态编码硬核定义
-├── src/                  # 微架构组合逻辑电路具体实现 (.cpp)
-│   ├── CPU.cpp           # 核心六阶段（Fetch 到 PC Update）组合逻辑流转实现
-│   └── Main.cpp          # 硬件主板 Testbench，负责起振晶振物理循环
-└── tests/                # 针对指令集仿真正确性的自动校验测试用例集
-
+y86_simulator/
+├── CMakeLists.txt              # 构建逻辑
+├── LICENSE
+├── README.md
+├── docs/                       # 体系结构白皮书
+│   └── ...
+├── include/                    # 【核心头文件】
+│   ├── CPU.h                   # 状态机声明
+│   ├── Memory.h                # 内存总线接口
+│   ├── RegisterFile.h          # 寄存器堆接口
+│   └── Types.h                 # 【单源头】存放所有 ISA 硬编码、硬件状态常量
+├── src/                        # 【逻辑实现层】
+│   ├── CPU.cpp                 # SEQ 状态机逻辑
+│   ├── Memory.cpp              # 内存实现（读写、小端序转换）
+│   ├── RegisterFile.cpp        # 寄存器堆实现
+│   └── Main.cpp                # 硬件 Testbench/起振循环
+├── tools/                      # 【辅助工具链】
+│   ├── yas.py                  # Python 汇编器（负责将 .ys 转为 .yo）
+│   └── README.md               # 工具链使用指南
+├── asm_src/                    # 汇编源码仓
+│   └── asumi.ys
+└── tests/                      # 自动校验测试集
 ```

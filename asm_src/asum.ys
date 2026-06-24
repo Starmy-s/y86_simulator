@@ -1,0 +1,39 @@
+# asm_src/asum.ys
+.pos 0
+    irmovq stack, %rsp     # 初始化物理栈指针
+    call main              # 调用主函数
+    halt                   # 退出
+
+# 静态物理数据区
+.align 8
+array:
+    .quad 0x00d
+    .quad 0x0c0
+    .quad 0xb00
+
+main:
+    irmovq array, %rdi     # 参数 1: 数组首地址
+    irmovq $3, %rsi        # 参数 2: 数组长度 (3)
+    call sum               # 调用求和子程序
+    ret
+
+sum:
+    irmovq $0, %rax        # %rax = val = 0
+    irmovq $8, %r8         # %r8 = 常数 8 (用于指针移动)
+    irmovq $1, %r9         # %r9 = 常数 1 (用于长度递减)
+    jmp test
+
+loop:
+    mrmovq (%rdi), %r10    # Fetch: 从内存读入 array[i] 到 %r10
+    addq %r10, %rax        # Execute: val += array[i]
+    addq %r8, %rdi         # array++ (物理地址前进 8 字节)
+    subq %r9, %rsi         # count--
+
+test:
+    andq %rsi, %rsi        # 检查 count 是否为 0
+    jne loop               # 如果不为 0，继续循环
+    ret
+
+# 开辟物理栈空间
+.pos 0x200
+stack:

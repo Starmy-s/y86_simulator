@@ -1,0 +1,12 @@
+# asm_src/loop_cnt.ys
+.pos 0
+    irmovq $5, %rax        # rax = 循环计数器 (5)
+    irmovq $0x10, %rcx     # rcx = 步长累加器 (0x10)
+    irmovq $0, %rdx        # rdx = 结果寄存器 (0)
+    irmovq $1, %rbx        # rbx = 常数 1 (用于自减)
+
+loop:
+    addq %rcx, %rdx        # rdx += rcx
+    subq %rbx, %rax        # rax -= 1 (当 rax 减到 0 时，硬件 CC.ZF 变 1)
+    jne loop               # 如果 ZF == 0 (即 rax != 0)，继续跳回 loop
+    halt                   # 熔断退出
